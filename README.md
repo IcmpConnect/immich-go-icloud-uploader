@@ -1,10 +1,82 @@
 # 📸 ImmichGo iCloud Uploader (macOS)
 
-Eine native, moderne macOS-App (SwiftUI) zum **Filtern**, **Vorschauen**, **lokalen Sichern** und **Hochladen** von Apple Fotos & iCloud-Medien auf eine selbstgehostete [Immich](https://immich.app)-Instanz oder auf beliebige lokale Datenträger (Festplatte, USB, NAS).
+[![macOS 14+](https://img.shields.io/badge/macOS-14.0%2B-blue.svg)](https://www.apple.com/macos/)
+[![Swift 5.9](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
+[![Version](https://img.shields.io/badge/version-v1.1.0-brightgreen.svg)](https://github.com/IcmpConnect/immich-go-icloud-uploader/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+🌐 **Language / Sprache**: [English](#english) | [Deutsch](#deutsch)
 
 ---
 
-## ✨ Highlights & Funktionen
+<a name="english"></a>
+## 🇬🇧 English
+
+A modern, native macOS SwiftUI application designed to **filter**, **preview**, **locally backup**, and **upload** Apple Photos & iCloud media to a self-hosted [Immich](https://immich.app) server or to any local/network destination (external SSD, USB drive, NAS share).
+
+### ✨ Key Features
+
+- **🌍 Fully Bilingual (v1.1.0)**:
+  - Instant live language switching between **🇬🇧 English** and **🇩🇪 Deutsch** from the toolbar menu.
+  - Automatic detection of your macOS system language on initial launch.
+  - Real-time translated status messages, filter options, dialogs, and integrated guide.
+
+- **🎯 Guided 3-Step Workflow**:
+  1. **System Check**: Automatic validation of requirements (`immich-go` CLI & Photos Library permissions).
+  2. **Filter & Live Preview**: Filter precisely by media type (*All*, *Photos only*, *Videos only*) and date range (*Entire Library*, *Year & Month*, or *Custom Date Range*).
+  3. **Choose Destination & Run**: Pick between structured local disk export or direct Immich server upload.
+
+- **🖼️ Fast Live Media Preview**:
+  - Horizontal thumbnail carousel of matching media.
+  - Smooth caching via `PHCachingImageManager`.
+  - Badges for video durations and Live Photos.
+  - Accurate counts for photos and videos.
+
+- **📁 Local Export with Date Hierarchy (`Year / Month / Day`)**:
+  - Exports originals directly to hard drives, external media, or NAS shares.
+  - Organized chronologically: `[Destination]/YYYY/MM/DD/[Filename]` (e.g. `2023/11/05/IMG_1234.HEIC`).
+  - **Live Photos paired**: Photo and companion video are always stored together with identical base names.
+  - **Continuous parallel streaming**: High-throughput transfers without arbitrary batch pauses.
+  - **Smart Overwrite Protection**: Existing files are never overwritten; identical file names receive safe suffixes (`_1`, `_2`).
+
+- **☁️ Immich Server Upload**:
+  - Seamless integration with the high-performance `immich-go` engine.
+  - Parallel uploads and configurable batch sizes.
+  - Prevents local disk filling by continuously clearing temporary download caches.
+
+- **🛡️ Maximum Stability & Fault Tolerance**:
+  - Automatic **3x retry with exponential backoff** for iCloud downloads.
+  - Non-blocking: **Pause**, **Resume**, and **Cancel** at any moment.
+  - Incremental history: Remembers transferred assets in JSON state files to skip duplicates upon restart.
+  - Memory-safe bounded logging console to avoid performance leaks.
+
+- **❓ Integrated Help System**:
+  - Accessible directly inside the app via the toolbar or menu.
+  - 5 comprehensive chapters covering quick start, local NAS backups, API keys, date filtering, and troubleshooting.
+
+### 🚀 Download & Installation
+
+Download the ready-to-run installation package:
+
+👉 **[Download Latest Release (v1.1.0)](https://github.com/IcmpConnect/immich-go-icloud-uploader/releases)**
+
+1. Open `ImmichGoUploader.dmg`.
+2. Drag `ImmichGoUploader` into your **Applications** folder.
+3. Launch the app and grant Apple Photos library permission when prompted.
+
+---
+
+<a name="deutsch"></a>
+## 🇩🇪 Deutsch
+
+Eine native, moderne macOS-App (SwiftUI) zum **Filtern**, **Vorschauen**, **lokalen Sichern** und **Hochladen** von Apple Fotos & iCloud-Medien auf eine selbstgehostete [Immich](https://immich.app)-Instanz oder auf beliebige lokale Datenträger (Festplatte, USB, NAS).
+
+### ✨ Highlights & Funktionen
+
+- **🌍 Vollständig Zweisprachig (v1.1.0)**:
+  - Umschaltung in Echtzeit zwischen **🇩🇪 Deutsch** und **🇬🇧 English** über das Menü in der Symbolleiste.
+  - Automatische Erkennung der macOS-Systemsprache beim ersten Start.
+  - Statusanzeigen, Filter, Dialoge und Hilfesystem passen sich sofort ohne Neustart an.
 
 - **🎯 Geführter 3-Schritte-Workflow**:
   1. **Prüfung**: Automatische Überprüfung der System-Voraussetzungen (`immich-go`, Fotos-Berechtigung).
