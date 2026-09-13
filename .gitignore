@@ -1,0 +1,31 @@
+# macOS Systemdateien
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Xcode Build-Artefakte & Caches
+build/
+DerivedData/
+*.moved-aside
+*.xcuserstate
+xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# App-interne Verlaufs- und Zustandsdaten (Schutz privater Daten)
+ImmichGo_UploadedAssets.json
+ImmichGo_ExportedAssets.json
+*.log
+
+# Große Release-Dateien (gehören unter "GitHub Releases", nicht ins Git-Repo)
+*.dmg
+*.zip
+
+# Temporäre Dateien
+/tmp/
+*.swp
+*~
