@@ -4,7 +4,8 @@ import Photos
 struct ContentView: View {
     @StateObject private var uploadManager = UploadManager()
     
-    // Einstellungen
+    // Sprache & Einstellungen
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .defaultLanguage
     @AppStorage("serverIP") private var serverIP: String = ""
     @AppStorage("serverPort") private var serverPort: String = "2283"
     @AppStorage("apiKey") private var apiKey: String = ""
@@ -17,15 +18,24 @@ struct ContentView: View {
     @State private var showingHelp: Bool = false
     @State private var isAdvancedSettingsExpanded: Bool = false
     
-    private let months = [
-        "Januar", "Februar", "März", "April", "Mai", "Juni",
-        "Juli", "August", "September", "Oktober", "November", "Dezember"
-    ]
+    private var months: [String] {
+        if appLanguage == .de {
+            return [
+                "Januar", "Februar", "März", "April", "Mai", "Juni",
+                "Juli", "August", "September", "Oktober", "November", "Dezember"
+            ]
+        } else {
+            return [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ]
+        }
+    }
     
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                // Header mit Hilfe-Button
+                // Header mit Sprachauswahl & Hilfe-Button
                 headerView
                 
                 // System-Check Banner (falls Immich gewählt und etwas fehlt)
@@ -48,7 +58,7 @@ struct ContentView: View {
             }
             .padding(18)
         }
-        .frame(minWidth: 720, minHeight: 760)
+        .frame(minWidth: 720, minHeight: 780)
         .sheet(isPresented: $showingHelp) {
             HelpView()
         }
@@ -65,15 +75,27 @@ struct ContentView: View {
                 Text("Immich Go iCloud Uploader")
                     .font(.title2)
                     .fontWeight(.bold)
-                Text("Fotos aus iCloud herunterladen, filtern & zu Immich übertragen")
+                Text(appLanguage == .de 
+                     ? "Fotos aus iCloud filtern, sichern & zu Immich übertragen" 
+                     : "Filter, export & upload iCloud photos to Immich or local disk")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
             
             Spacer()
             
+            // Sprachumschalter (🇩🇪 / 🇬🇧)
+            Picker("", selection: $appLanguage) {
+                ForEach(AppLanguage.allCases) { lang in
+                    Text(lang.displayName).tag(lang)
+                }
+            }
+            .pickerStyle(.menu)
+            .frame(width: 140)
+            
+            // Hilfe-Button
             Button(action: { showingHelp = true }) {
-                Label("Hilfe & Anleitung", systemImage: "questionmark.circle")
+                Label(L10n.helpAndGuide(appLanguage), systemImage: "questionmark.circle")
             }
             .buttonStyle(.bordered)
         }
@@ -88,7 +110,9 @@ struct ContentView: View {
             case .checking:
                 HStack {
                     ProgressView().controlSize(.small)
-                    Text("System-Check: Prüfe Abhängigkeiten (immich-go)...")
+                    Text(appLanguage == .de 
+                         ? "System-Check: Prüfe Abhängigkeiten (immich-go)..." 
+                         : "System Check: Verifying dependencies (immich-go)...")
                 }
                 .padding(8)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -99,28 +123,32 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
-                        Text("System-Check: immich-go fehlt").font(.headline).foregroundColor(.orange)
+                        Text(appLanguage == .de 
+                             ? "System-Check: immich-go fehlt" 
+                             : "System Check: immich-go missing")
+                            .font(.headline)
+                            .foregroundColor(.orange)
                     }
                     Text(brewAvailable
-                         ? "Homebrew ist vorhanden, aber 'immich-go' fehlt für den Server-Upload."
-                         : "Homebrew und 'immich-go' wurden nicht gefunden.")
+                         ? (appLanguage == .de ? "Homebrew ist vorhanden, aber 'immich-go' fehlt für den Server-Upload." : "Homebrew is available, but 'immich-go' is missing for server upload.")
+                         : (appLanguage == .de ? "Homebrew und 'immich-go' wurden nicht gefunden." : "Homebrew and 'immich-go' were not found."))
                         .font(.caption)
                     
                     HStack(spacing: 10) {
                         if brewAvailable {
-                            Button("immich-go über Homebrew installieren") {
+                            Button(appLanguage == .de ? "immich-go über Homebrew installieren" : "Install immich-go via Homebrew") {
                                 uploadManager.installImmichGo()
                             }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.small)
                         } else {
-                            Button("Homebrew im Terminal installieren") {
+                            Button(appLanguage == .de ? "Homebrew im Terminal installieren" : "Install Homebrew in Terminal") {
                                 uploadManager.installHomebrew()
                             }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.small)
                             
-                            Button("Erneut prüfen") {
+                            Button(appLanguage == .de ? "Erneut prüfen" : "Check Again") {
                                 uploadManager.checkDependencies()
                             }
                             .buttonStyle(.bordered)
@@ -136,7 +164,7 @@ struct ContentView: View {
             case .installing:
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
-                    Text("Installiere immich-go via Homebrew...").font(.subheadline)
+                    Text(appLanguage == .de ? "Installiere immich-go via Homebrew..." : "Installing immich-go via Homebrew...").font(.subheadline)
                 }
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -147,7 +175,7 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Image(systemName: "xmark.octagon.fill").foregroundColor(.red)
-                        Text("Installation fehlgeschlagen").font(.headline).foregroundColor(.red)
+                        Text(L10n.installationFailed(appLanguage)).font(.headline).foregroundColor(.red)
                     }
                     Text(errorMsg).font(.caption)
                 }
@@ -164,15 +192,15 @@ struct ContentView: View {
     
     // MARK: - Schritt 1: Filter & Vorschau
     private var step1FilterAndPreviewView: some View {
-        GroupBox(label: Label("1. Medien filtern & Vorschau", systemImage: "line.3.horizontal.decrease.circle").font(.headline)) {
+        GroupBox(label: Label(L10n.step1Title(appLanguage), systemImage: "line.3.horizontal.decrease.circle").font(.headline)) {
             VStack(alignment: .leading, spacing: 12) {
                 // Medientyp & Zeitraum
                 HStack(spacing: 20) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Medientyp:").font(.caption).foregroundColor(.secondary)
+                        Text(L10n.mediaTypeLabel(appLanguage)).font(.caption).foregroundColor(.secondary)
                         Picker("", selection: $uploadManager.mediaTypeFilter) {
                             ForEach(MediaTypeFilter.allCases) { type in
-                                Text(type.rawValue).tag(type)
+                                Text(type.title(for: appLanguage)).tag(type)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -180,10 +208,10 @@ struct ContentView: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Zeitraum:").font(.caption).foregroundColor(.secondary)
+                        Text(L10n.dateRangeLabel(appLanguage)).font(.caption).foregroundColor(.secondary)
                         Picker("", selection: $uploadManager.dateFilterMode) {
                             ForEach(DateFilterMode.allCases) { mode in
-                                Text(mode.rawValue).tag(mode)
+                                Text(mode.title(for: appLanguage)).tag(mode)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -194,11 +222,11 @@ struct ContentView: View {
                 // Optionale Zeit-Details
                 if uploadManager.dateFilterMode == .monthYear {
                     HStack(spacing: 16) {
-                        Text("Monat & Jahr:")
+                        Text(L10n.monthAndYearLabel(appLanguage))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         
-                        Picker("Monat", selection: $uploadManager.selectedMonth) {
+                        Picker(L10n.monthLabel(appLanguage), selection: $uploadManager.selectedMonth) {
                             ForEach(1...12, id: \.self) { m in
                                 Text(months[m - 1]).tag(m)
                             }
@@ -206,7 +234,7 @@ struct ContentView: View {
                         .frame(width: 130)
                         .disabled(uploadManager.isUploading)
                         
-                        Stepper("Jahr: \(uploadManager.selectedYear)", value: $uploadManager.selectedYear, in: 2000...Calendar.current.component(.year, from: Date()))
+                        Stepper(L10n.yearLabel(appLanguage, year: uploadManager.selectedYear), value: $uploadManager.selectedYear, in: 2000...Calendar.current.component(.year, from: Date()))
                             .disabled(uploadManager.isUploading)
                         
                         Spacer()
@@ -214,10 +242,10 @@ struct ContentView: View {
                     .padding(.vertical, 2)
                 } else if uploadManager.dateFilterMode == .customRange {
                     HStack(spacing: 16) {
-                        DatePicker("Von:", selection: $uploadManager.filterStartDate, displayedComponents: .date)
+                        DatePicker(L10n.fromDateLabel(appLanguage), selection: $uploadManager.filterStartDate, displayedComponents: .date)
                             .disabled(uploadManager.isUploading)
                         
-                        DatePicker("Bis:", selection: $uploadManager.filterEndDate, displayedComponents: .date)
+                        DatePicker(L10n.toDateLabel(appLanguage), selection: $uploadManager.filterEndDate, displayedComponents: .date)
                             .disabled(uploadManager.isUploading)
                     }
                     .padding(.vertical, 2)
@@ -229,16 +257,17 @@ struct ContentView: View {
                 HStack {
                     if uploadManager.isLoadingPreview {
                         ProgressView().controlSize(.small)
-                        Text("Lade Mediathek...")
+                        Text(L10n.loadingLibrary(appLanguage))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     } else {
+                        let countInfo = L10n.mediaFoundCount(appLanguage, total: uploadManager.filteredAssets.count, photos: uploadManager.photoCount, videos: uploadManager.videoCount)
                         HStack(spacing: 6) {
                             Image(systemName: "checkmark.seal.fill")
                                 .foregroundColor(.blue)
-                            Text("\(uploadManager.filteredAssets.count) Medien gefunden")
+                            Text(countInfo.main)
                                 .font(.headline)
-                            Text("(\(uploadManager.photoCount) Fotos, \(uploadManager.videoCount) Videos)")
+                            Text(countInfo.sub)
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
@@ -247,7 +276,7 @@ struct ContentView: View {
                     Spacer()
                     
                     Button(action: { uploadManager.refreshFilteredAssets() }) {
-                        Label("Aktualisieren", systemImage: "arrow.clockwise")
+                        Label(L10n.refresh(appLanguage), systemImage: "arrow.clockwise")
                     }
                     .buttonStyle(.plain)
                     .font(.caption)
@@ -263,7 +292,7 @@ struct ContentView: View {
                             Image(systemName: "photo.on.rectangle.angled")
                                 .font(.largeTitle)
                                 .foregroundColor(.secondary.opacity(0.6))
-                            Text("Keine Medien für die gewählten Filter gefunden.")
+                            Text(L10n.noMediaFound(appLanguage))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -277,11 +306,12 @@ struct ContentView: View {
                                 MediaThumbnailView(asset: asset)
                             }
                             if uploadManager.filteredAssets.count > 25 {
+                                let more = L10n.moreItems(appLanguage, count: uploadManager.filteredAssets.count - 25)
                                 VStack {
-                                    Text("+\(uploadManager.filteredAssets.count - 25)")
+                                    Text(more.number)
                                         .font(.headline)
                                         .foregroundColor(.primary)
-                                    Text("weitere")
+                                    Text(more.text)
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                 }
@@ -301,11 +331,11 @@ struct ContentView: View {
     
     // MARK: - Schritt 2: Ziel auswählen
     private var step2TargetSelectionView: some View {
-        GroupBox(label: Label("2. Ziel auswählen", systemImage: "arrow.right.circle").font(.headline)) {
+        GroupBox(label: Label(L10n.step2Title(appLanguage), systemImage: "arrow.right.circle").font(.headline)) {
             VStack(alignment: .leading, spacing: 14) {
-                Picker("Wohin soll kopiert werden?", selection: $targetDestination) {
+                Picker(L10n.targetDestinationQuestion(appLanguage), selection: $targetDestination) {
                     ForEach(TargetDestination.allCases) { dest in
-                        Text(dest.rawValue).tag(dest)
+                        Text(dest.title(for: appLanguage)).tag(dest)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -320,7 +350,7 @@ struct ContentView: View {
                                 .foregroundColor(.blue)
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Zielordner auf der Festplatte:")
+                                Text(L10n.targetFolderOnDisk(appLanguage))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 if let folder = exportDestinationFolder {
@@ -330,7 +360,7 @@ struct ContentView: View {
                                         .lineLimit(1)
                                         .truncationMode(.middle)
                                 } else {
-                                    Text("Noch kein Zielordner ausgewählt")
+                                    Text(L10n.noTargetFolderSelected(appLanguage))
                                         .font(.subheadline)
                                         .foregroundColor(.red)
                                 }
@@ -338,7 +368,7 @@ struct ContentView: View {
                             
                             Spacer()
                             
-                            Button("Zielordner wählen...") {
+                            Button(L10n.chooseTargetFolder(appLanguage)) {
                                 selectLocalDestinationFolder()
                             }
                             .buttonStyle(.borderedProminent)
@@ -348,7 +378,7 @@ struct ContentView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "folder.badge.plus")
                                 .foregroundColor(.blue)
-                            Text("Ablage erfolgt automatisch in Unterordnern Jahr/Monat/Tag (z. B. 2023/11/05/). Vorhandene Dateien werden geschützt und nicht überschrieben.")
+                            Text(L10n.folderHierarchyNotice(appLanguage))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -360,12 +390,12 @@ struct ContentView: View {
                     // Immich Server Upload
                     VStack(spacing: 10) {
                         HStack {
-                            Text("Server IP:")
+                            Text(L10n.serverIPLabel(appLanguage))
                                 .frame(width: 80, alignment: .leading)
                             TextField("z.B. http://192.168.1.100", text: $serverIP)
                                 .textFieldStyle(.roundedBorder)
                             
-                            Text("Port:")
+                            Text(L10n.serverPortLabel(appLanguage))
                                 .frame(width: 40, alignment: .leading)
                             TextField("2283", text: $serverPort)
                                 .textFieldStyle(.roundedBorder)
@@ -373,15 +403,15 @@ struct ContentView: View {
                         }
                         
                         HStack {
-                            Text("API Key:")
+                            Text(L10n.apiKeyLabel(appLanguage))
                                 .frame(width: 80, alignment: .leading)
-                            SecureField("Dein Immich API-Schlüssel", text: $apiKey)
+                            SecureField(L10n.apiKeyPlaceholder(appLanguage), text: $apiKey)
                                 .textFieldStyle(.roundedBorder)
                         }
                         
                         HStack {
                             Spacer()
-                            Button("Oder: Beliebigen bestehenden Ordner zu Immich hochladen...") {
+                            Button(L10n.uploadArbitraryFolder(appLanguage)) {
                                 selectAndUploadArbitraryFolder()
                             }
                             .buttonStyle(.plain)
@@ -404,7 +434,7 @@ struct ContentView: View {
                 HStack(spacing: 24) {
                     Stepper(value: $concurrentDownloads, in: 1...10) {
                         HStack {
-                            Text("Parallele Downloads:")
+                            Text(L10n.parallelDownloads(appLanguage))
                             Text("\(concurrentDownloads)").fontWeight(.bold)
                         }
                     }
@@ -412,7 +442,7 @@ struct ContentView: View {
                     
                     Stepper(value: $batchSize, in: 10...200, step: 10) {
                         HStack {
-                            Text(targetDestination == .localFolder ? "Batch (nur Immich):" : "Batch-Größe:")
+                            Text(targetDestination == .localFolder ? L10n.batchSizeImmichOnly(appLanguage) : L10n.batchSize(appLanguage))
                             Text("\(batchSize)").fontWeight(.bold)
                         }
                     }
@@ -425,13 +455,13 @@ struct ContentView: View {
                 
                 HStack(spacing: 18) {
                     HStack {
-                        Text("Upload-Verlauf:")
+                        Text(L10n.uploadHistory(appLanguage))
                             .font(.caption)
-                        Text("\(uploadManager.uploadedCount) erfasst")
+                        Text(L10n.itemsTracked(appLanguage, count: uploadManager.uploadedCount))
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Spacer()
-                        Button("Zurücksetzen") {
+                        Button(L10n.reset(appLanguage)) {
                             uploadManager.resetUploadedAssets()
                         }
                         .buttonStyle(.bordered)
@@ -442,13 +472,13 @@ struct ContentView: View {
                     Divider().frame(height: 20)
                     
                     HStack {
-                        Text("Export-Verlauf:")
+                        Text(L10n.exportHistory(appLanguage))
                             .font(.caption)
-                        Text("\(uploadManager.exportedCount) erfasst")
+                        Text(L10n.itemsTracked(appLanguage, count: uploadManager.exportedCount))
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Spacer()
-                        Button("Zurücksetzen") {
+                        Button(L10n.reset(appLanguage)) {
                             uploadManager.resetExportedAssets()
                         }
                         .buttonStyle(.bordered)
@@ -459,7 +489,7 @@ struct ContentView: View {
             }
             .padding(.top, 8)
         } label: {
-            Label("Erweiterte Einstellungen & Verlauf", systemImage: "gearshape")
+            Label(L10n.advancedSettingsTitle(appLanguage), systemImage: "gearshape")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -472,7 +502,7 @@ struct ContentView: View {
             if uploadManager.isUploading {
                 HStack(spacing: 16) {
                     Button(action: { uploadManager.togglePause() }) {
-                        Label(uploadManager.isPaused ? "Fortsetzen" : "Pausieren", systemImage: uploadManager.isPaused ? "play.fill" : "pause.fill")
+                        Label(uploadManager.isPaused ? L10n.resume(appLanguage) : L10n.pause(appLanguage), systemImage: uploadManager.isPaused ? "play.fill" : "pause.fill")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
@@ -481,9 +511,9 @@ struct ContentView: View {
                     Button(action: {
                         uploadManager.isUploading = false
                         uploadManager.isPaused = false
-                        uploadManager.statusMessage = "Abgebrochen"
+                        uploadManager.statusMessage = L10n.cancel(appLanguage)
                     }) {
-                        Label("Abbrechen", systemImage: "xmark.circle")
+                        Label(L10n.cancel(appLanguage), systemImage: "xmark.circle")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
@@ -511,9 +541,9 @@ struct ContentView: View {
     private var actionButtonTitle: String {
         let count = uploadManager.filteredAssets.count
         if targetDestination == .localFolder {
-            return "iCloud-Fotos in lokalen Ordner exportieren (\(count) Elemente)"
+            return L10n.actionButtonExport(appLanguage, count: count)
         } else {
-            return "Ausgewählte Medien zu Immich hochladen (\(count) Elemente)"
+            return L10n.actionButtonUpload(appLanguage, count: count)
         }
     }
     
@@ -522,7 +552,7 @@ struct ContentView: View {
         if uploadManager.filteredAssets.isEmpty { return false }
         
         if targetDestination == .localFolder {
-            return true // Falls noch kein Ordner gewählt wurde, öffnet der Klick den Dialog
+            return true
         } else {
             return uploadManager.dependencyStatus == .ready && !serverIP.isEmpty && !apiKey.isEmpty
         }
@@ -553,9 +583,9 @@ struct ContentView: View {
     private var statusAndConsoleView: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Status:")
+                Text(L10n.statusLabel(appLanguage))
                     .fontWeight(.semibold)
-                Text(uploadManager.statusMessage)
+                Text(uploadManager.statusMessage.isEmpty ? L10n.readyStatus(appLanguage) : uploadManager.statusMessage)
                     .foregroundColor(.secondary)
                 
                 Spacer()
@@ -594,8 +624,8 @@ struct ContentView: View {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
-        panel.title = "Zielordner für Foto-Download wählen"
-        panel.prompt = "Als Zielordner wählen"
+        panel.title = appLanguage == .de ? "Zielordner für Foto-Download wählen" : "Select Target Folder for Photo Download"
+        panel.prompt = appLanguage == .de ? "Als Zielordner wählen" : "Select as Destination"
         
         panel.begin { response in
             if response == .OK, let url = panel.url {
@@ -615,7 +645,8 @@ struct ContentView: View {
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
-        panel.title = "Ordner für Upload wählen"
+        panel.title = appLanguage == .de ? "Ordner für Upload wählen" : "Select Folder for Upload"
+        panel.prompt = appLanguage == .de ? "Hochladen" : "Upload"
         
         panel.begin { response in
             if response == .OK, let url = panel.url {

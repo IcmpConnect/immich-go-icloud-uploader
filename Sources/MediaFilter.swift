@@ -2,26 +2,49 @@ import SwiftUI
 import Photos
 
 enum MediaTypeFilter: String, CaseIterable, Identifiable {
-    case all = "Alle Medien"
-    case photos = "Nur Fotos"
-    case videos = "Nur Videos"
+    case all = "all"
+    case photos = "photos"
+    case videos = "videos"
     
     var id: String { rawValue }
+    
+    func title(for lang: AppLanguage) -> String {
+        switch self {
+        case .all: return lang == .de ? "Alle Medien" : "All Media"
+        case .photos: return lang == .de ? "Nur Fotos" : "Photos only"
+        case .videos: return lang == .de ? "Nur Videos" : "Videos only"
+        }
+    }
 }
 
 enum DateFilterMode: String, CaseIterable, Identifiable {
-    case all = "Gesamte Mediathek"
-    case monthYear = "Monat & Jahr"
-    case customRange = "Zeitraum (Von / Bis)"
+    case all = "all"
+    case monthYear = "monthYear"
+    case customRange = "customRange"
     
     var id: String { rawValue }
+    
+    func title(for lang: AppLanguage) -> String {
+        switch self {
+        case .all: return lang == .de ? "Gesamte Mediathek" : "Entire Library"
+        case .monthYear: return lang == .de ? "Monat & Jahr" : "Month & Year"
+        case .customRange: return lang == .de ? "Freier Zeitraum" : "Custom Range"
+        }
+    }
 }
 
 enum TargetDestination: String, CaseIterable, Identifiable {
-    case localFolder = "Lokaler Ordner"
-    case immichServer = "Immich-Server"
+    case localFolder = "localFolder"
+    case immichServer = "immichServer"
     
     var id: String { rawValue }
+    
+    func title(for lang: AppLanguage) -> String {
+        switch self {
+        case .localFolder: return lang == .de ? "📁 Lokaler Ordner" : "📁 Local Folder"
+        case .immichServer: return lang == .de ? "☁️ Immich-Server" : "☁️ Immich Server"
+        }
+    }
 }
 
 struct MediaThumbnailView: View {

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		587BC09D7D283FAC28704DEB /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF1C727526297DCCA376621 /* Localization.swift */; };
 		5D184A235AD334D7688F545B /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19713182C14094F807E09C34 /* HelpView.swift */; };
 		874B12C1337D57C863440483 /* MediaFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6D018F849428F41E2C3AD22 /* MediaFilter.swift */; };
 		A54967EB2169CBAE231FFE6E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E73F538DB9F39502BA673490 /* Assets.xcassets */; };
@@ -24,6 +25,7 @@
 		A2402F13816F6BF2B6D1DEE2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C6D018F849428F41E2C3AD22 /* MediaFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaFilter.swift; sourceTree = "<group>"; };
 		C8E90BFF2453F8E8331EBD2E /* ImmichGoUploader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImmichGoUploader.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CDF1C727526297DCCA376621 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		E73F538DB9F39502BA673490 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -53,6 +55,7 @@
 				19713182C14094F807E09C34 /* HelpView.swift */,
 				7D415FEC894A76A93FE7B53F /* ImmichGoUploaderApp.swift */,
 				A2402F13816F6BF2B6D1DEE2 /* Info.plist */,
+				CDF1C727526297DCCA376621 /* Localization.swift */,
 				C6D018F849428F41E2C3AD22 /* MediaFilter.swift */,
 				0A38EC15DF45E37D82583274 /* UploadManager.swift */,
 			);
@@ -129,6 +132,7 @@
 				FFE4ECBF8B7A1B2E58DB4E06 /* ContentView.swift in Sources */,
 				5D184A235AD334D7688F545B /* HelpView.swift in Sources */,
 				ECD8543508C6254EFBD15809 /* ImmichGoUploaderApp.swift in Sources */,
+				587BC09D7D283FAC28704DEB /* Localization.swift in Sources */,
 				874B12C1337D57C863440483 /* MediaFilter.swift in Sources */,
 				EB68B4F9114DD0C17AB944BF /* UploadManager.swift in Sources */,
 			);
@@ -261,12 +265,14 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/Entitlements.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 2;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jensschneider.ImmichGoUploader;
 				SDKROOT = macosx;
 			};
@@ -279,12 +285,14 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/Entitlements.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 2;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jensschneider.ImmichGoUploader;
 				SDKROOT = macosx;
 			};
