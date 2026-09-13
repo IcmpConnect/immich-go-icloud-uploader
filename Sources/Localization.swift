@@ -230,3 +230,77 @@ struct L10n {
         lang == .de ? "Bereit" : "Ready"
     }
 }
+
+enum AppStatus: Equatable {
+    case ready
+    case pausing
+    case paused(progress: String?)
+    case resuming
+    case uploadingFolder
+    case folderUploadSucceeded
+    case folderUploadFailed(code: Int32)
+    case shellError
+    case checkingLibrary
+    case noPhotosAccess
+    case allUpToDate
+    case allExported
+    case tempDirError
+    case processingBatch(start: Int, end: Int, total: Int)
+    case exporting(current: Int, total: Int, percent: Int)
+    case exportCompleted(saved: Int)
+    case uploadCompleted
+    case cancelled
+    case custom(de: String, en: String)
+    
+    func localized(for lang: AppLanguage) -> String {
+        switch self {
+        case .ready:
+            return lang == .de ? "Bereit" : "Ready"
+        case .pausing:
+            return lang == .de ? "Pausiere nach aktuellem Batch..." : "Pausing after current batch..."
+        case .paused(let progress):
+            if let progress = progress {
+                return lang == .de ? "Pausiert (\(progress))" : "Paused (\(progress))"
+            }
+            return lang == .de ? "Pausiert" : "Paused"
+        case .resuming:
+            return lang == .de ? "Setze Vorgang fort..." : "Resuming operation..."
+        case .uploadingFolder:
+            return lang == .de ? "Lade Ordner hoch..." : "Uploading folder..."
+        case .folderUploadSucceeded:
+            return lang == .de ? "Ordner erfolgreich hochgeladen!" : "Folder successfully uploaded!"
+        case .folderUploadFailed(let code):
+            return lang == .de ? "Fehler beim Ordner-Upload (Code \(code))" : "Folder upload failed (Code \(code))"
+        case .shellError:
+            return lang == .de ? "Fehler bei Shell-Ausführung" : "Shell execution error"
+        case .checkingLibrary:
+            return lang == .de ? "Prüfe Fotos-Mediathek..." : "Checking Photos library..."
+        case .noPhotosAccess:
+            return lang == .de ? "Fehler: Kein Zugriff auf Fotos" : "Error: No access to Photos"
+        case .allUpToDate:
+            return lang == .de ? "Alles auf dem neuesten Stand!" : "Everything up to date!"
+        case .allExported:
+            return lang == .de ? "Alle ausgewählten Fotos bereits exportiert!" : "All selected photos already exported!"
+        case .tempDirError:
+            return lang == .de ? "Temporäres Verzeichnis Fehler" : "Temporary directory error"
+        case .processingBatch(let start, let end, let total):
+            return lang == .de 
+                ? "Verarbeite Batch \(start) bis \(end) von \(total)..." 
+                : "Processing batch \(start) to \(end) of \(total)..."
+        case .exporting(let current, let total, let percent):
+            return lang == .de 
+                ? "Exportiere \(current) von \(total) (\(percent)%)..." 
+                : "Exporting \(current) of \(total) (\(percent)%)..."
+        case .exportCompleted(let saved):
+            return lang == .de 
+                ? "Export erfolgreich abgeschlossen (\(saved) gespeichert)!" 
+                : "Export successfully completed (\(saved) saved)!"
+        case .uploadCompleted:
+            return lang == .de ? "Erfolgreich abgeschlossen!" : "Successfully completed!"
+        case .cancelled:
+            return lang == .de ? "Abgebrochen" : "Cancelled"
+        case .custom(let de, let en):
+            return lang == .de ? de : en
+        }
+    }
+}

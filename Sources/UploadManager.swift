@@ -5,7 +5,16 @@ import Photos
 class UploadManager: ObservableObject {
     @Published var isUploading: Bool = false
     @Published var isPaused: Bool = false
-    @Published var statusMessage: String = "Bereit"
+    @Published var currentStatus: AppStatus = .ready
+    
+    var statusMessage: String {
+        get { currentStatus.localized(for: .defaultLanguage) }
+        set { currentStatus = .custom(de: newValue, en: newValue) }
+    }
+    
+    func statusText(for lang: AppLanguage) -> String {
+        currentStatus.localized(for: lang)
+    }
     @Published var logOutput: String = "" {
         didSet {
             let maxLogCharacters = 25_000
@@ -59,14 +68,15 @@ class UploadManager: ObservableObject {
     func togglePause() {
         isPaused.toggle()
         if isPaused {
-            if statusMessage.starts(with: "Verarbeite") || statusMessage.starts(with: "Exportiere") {
-                statusMessage = "Pausiere nach aktuellem Batch..."
-            } else {
-                statusMessage = "Pausiert"
+            switch currentStatus {
+            case .processingBatch, .exporting:
+                currentStatus = .pausing
+            default:
+                currentStatus = .paused(progress: nil)
             }
             logOutput.append("Pausierungsanforderung empfangen. Der laufende Batch wird beendet...\n")
         } else {
-            statusMessage = "Setze Vorgang fort..."
+            currentStatus = .resuming
         }
     }
     
@@ -389,21 +399,21 @@ class UploadManager: ObservableObject {
     func startFolderUpload(serverIP: String, serverPort: String, apiKey: String, folderPath: String) {
         isUploading = true
         logOutput = "Starte Ordner-Upload für: \(folderPath)...\n"
-        statusMessage = "Lade Ordner hoch..."
+        currentStatus = .uploadingFolder
         
         Task {
             do {
                 let exitStatus = try await runImmichGo(server: "\(serverIP):\(serverPort)", apiKey: apiKey, folderPath: folderPath)
                 if exitStatus == 0 {
                     logOutput.append("Ordner erfolgreich hochgeladen.\n")
-                    statusMessage = "Ordner erfolgreich hochgeladen!"
+                    currentStatus = .folderUploadSucceeded
                 } else {
                     logOutput.append("Fehler: immich-go beendete mit Code \(exitStatus).\n")
-                    statusMessage = "Fehler beim Ordner-Upload (Code \(exitStatus))"
+                    currentStatus = .folderUploadFailed(code: exitStatus)
                 }
             } catch {
                 logOutput.append("Fehler beim Ausführen von immich-go: \(error.localizedDescription)\n")
-                statusMessage = "Fehler bei Shell-Ausführung"
+                currentStatus = .shellError
             }
             isUploading = false
         }
@@ -425,7 +435,7 @@ class UploadManager: ObservableObject {
                     }
                 default:
                     self.logOutput.append("Fehler: Zugriff auf Apple Fotos-Mediathek wurde verweigert.\n")
-                    self.statusMessage = "Fehler: Kein Zugriff auf Fotos"
+                    self.currentStatus = .noPhotosAccess
                     self.isUploading = false
                 }
             }
@@ -436,7 +446,7 @@ class UploadManager: ObservableObject {
         isUploading = true
         isPaused = false
         logOutput = "Starte Apple Fotos Export nach: \(destinationURL.path) (parallele Downloads: \(concurrencyLimit))...\n"
-        statusMessage = "Prüfe Fotos-Mediathek..."
+        currentStatus = .checkingLibrary
         
         PHPhotoLibrary.requestAuthorization(for: .readWrite) { [weak self] status in
             guard let self = self else { return }
@@ -450,7 +460,7 @@ class UploadManager: ObservableObject {
                     }
                 default:
                     self.logOutput.append("Fehler: Zugriff auf Apple Fotos-Mediathek wurde verweigert.\n")
-                    self.statusMessage = "Fehler: Kein Zugriff auf Fotos"
+                    self.currentStatus = .noPhotosAccess
                     self.isUploading = false
                 }
             }
@@ -483,7 +493,7 @@ class UploadManager: ObservableObject {
         logOutput.append("Gefunden: \(allAssets.count) Assets insgesamt. Zu verarbeiten: \(totalAssets) (bereits hochgeladen: \(uploadedAssetIDs.count)).\n")
         
         if totalAssets == 0 {
-            statusMessage = "Alles auf dem neuesten Stand!"
+            currentStatus = .allUpToDate
             isUploading = false
             return
         }
@@ -495,7 +505,7 @@ class UploadManager: ObservableObject {
                 try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
             } catch {
                 logOutput.append("Fehler beim Erstellen des temporären Verzeichnisses: \(error.localizedDescription)\n")
-                statusMessage = "Temporäres Verzeichnis Fehler"
+                currentStatus = .tempDirError
                 isUploading = false
                 return
             }
@@ -504,7 +514,7 @@ class UploadManager: ObservableObject {
         var index = 0
         while index < totalAssets {
             if isPaused {
-                statusMessage = "Pausiert"
+                currentStatus = .paused(progress: nil)
                 logOutput.append("Upload pausiert. Warte auf Fortsetzung...\n")
                 while isPaused {
                     do {
@@ -523,7 +533,7 @@ class UploadManager: ObservableObject {
             let batch = Array(filteredAssets[index..<endIndex])
             let batchDisplayStart = index + 1
             
-            statusMessage = "Verarbeite Batch \(batchDisplayStart) bis \(endIndex) von \(totalAssets)..."
+            currentStatus = .processingBatch(start: batchDisplayStart, end: endIndex, total: totalAssets)
             logOutput.append("========================================\n")
             logOutput.append("Verarbeite Batch \(batchDisplayStart) bis \(endIndex)...\n")
             
@@ -664,7 +674,7 @@ class UploadManager: ObservableObject {
         clearTempDirectory(at: tempDir)
         
         logOutput.append("Upload abgeschlossen! Alle \(totalAssets) neuen Assets verarbeitet.\n")
-        statusMessage = "Erfolgreich abgeschlossen!"
+        currentStatus = .uploadCompleted
         isUploading = false
     }
     
@@ -676,7 +686,7 @@ class UploadManager: ObservableObject {
         logOutput.append("Gefunden: \(allAssets.count) Assets insgesamt. Zu exportieren: \(totalAssets) (bereits exportiert: \(exportedAssetIDs.count)).\n")
         
         if totalAssets == 0 {
-            statusMessage = "Alle ausgewählten Fotos bereits exportiert!"
+            currentStatus = .allExported
             isUploading = false
             return
         }
@@ -685,7 +695,7 @@ class UploadManager: ObservableObject {
         var successCount = 0
         var failedCount = 0
         
-        statusMessage = "Exportiere 0 von \(totalAssets) (0%)..."
+        currentStatus = .exporting(current: 0, total: totalAssets, percent: 0)
         logOutput.append("Starte kontinuierlichen Export von \(totalAssets) Medien nach: \(destinationURL.path)\n")
         logOutput.append("Parallele Downloads: \(concurrencyLimit) | Ordnerstruktur: Jahr/Monat/Tag\n")
         
@@ -697,7 +707,7 @@ class UploadManager: ObservableObject {
                 while assetIdx < totalAssets || activeCount > 0 {
                     // Auf Pause prüfen
                     while self.isPaused {
-                        self.statusMessage = "Pausiert (\(processedCount)/\(totalAssets))"
+                        self.currentStatus = .paused(progress: "\(processedCount)/\(totalAssets)")
                         try await Task.sleep(nanoseconds: 500_000_000)
                         if !self.isUploading { break }
                     }
@@ -787,7 +797,7 @@ class UploadManager: ObservableObject {
                         let details = result.2
                         
                         let percent = Int((Double(processedCount) / Double(totalAssets)) * 100)
-                        self.statusMessage = "Exportiere \(processedCount) von \(totalAssets) (\(percent)%)..."
+                        self.currentStatus = .exporting(current: processedCount, total: totalAssets, percent: percent)
                         
                         if succeeded {
                             successCount += 1
@@ -809,7 +819,7 @@ class UploadManager: ObservableObject {
             logOutput.append("========================================\n")
             logOutput.append("Export abgeschlossen!\n")
             logOutput.append("Gesamt: \(processedCount) verarbeitet (\(successCount) erfolgreich, \(failedCount) fehlgeschlagen).\n")
-            statusMessage = "Export erfolgreich abgeschlossen (\(successCount) gespeichert)!"
+            currentStatus = .exportCompleted(saved: successCount)
             isUploading = false
         }
     }

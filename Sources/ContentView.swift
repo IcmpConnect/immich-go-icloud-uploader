@@ -511,7 +511,7 @@ struct ContentView: View {
                     Button(action: {
                         uploadManager.isUploading = false
                         uploadManager.isPaused = false
-                        uploadManager.statusMessage = L10n.cancel(appLanguage)
+                        uploadManager.currentStatus = .cancelled
                     }) {
                         Label(L10n.cancel(appLanguage), systemImage: "xmark.circle")
                             .frame(maxWidth: .infinity)
@@ -585,7 +585,7 @@ struct ContentView: View {
             HStack {
                 Text(L10n.statusLabel(appLanguage))
                     .fontWeight(.semibold)
-                Text(uploadManager.statusMessage.isEmpty ? L10n.readyStatus(appLanguage) : uploadManager.statusMessage)
+                Text(uploadManager.statusText(for: appLanguage))
                     .foregroundColor(.secondary)
                 
                 Spacer()
